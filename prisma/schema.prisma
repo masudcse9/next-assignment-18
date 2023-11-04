@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+  
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user{
+  id BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  firstName       String    @db.VarChar(50)
+  middleName      String    @db.VarChar(50)
+  lastName        String    @db.VarChar(50)
+  email           String    @unique @db.VarChar(50)
+  mobile          String    @unique @db.VarChar(50)
+  passwordHash    String 
+  registeredAt    DateTime  @default(now()) @db.Timestamp(0)
+  lastLogin       DateTime 
+  intro           String    @db.TinyText
+  profile         String    @db.Text
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+  updated_at      DateTime  @default(now()) @db.Timestamp(0) @updatedAt
+
+  post     post[]
+
+}
+
+
+model category {
+  id             BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  parentId       BigInt             @db.UnsignedBigInt
+  title   String     @db.VarChar(50)
+  metaTitle    String     @db.VarChar(300)
+  created_at     DateTime   @default(now()) @db.Timestamp(0)
+  updated_at     DateTime   @default(now()) @db.Timestamp(0)
+  post_category      post_category[]
+ 
+}
+
+model tag {
+  id              BigInt     @id @default(autoincrement()) @db.UnsignedBigInt()
+  title           String     @db.VarChar(75)
+  metaTitle       String     @db.VarChar(100)
+  slug            String     @db.VarChar(100)
+  created_at      DateTime   @default(now()) @db.Timestamp(0)
+  updated_at      DateTime   @default(now()) @db.Timestamp(0)
+  post_tag        post_tag[]
+ 
+}
+
+model post {
+  id              BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
+  authorId        BigInt                @db.UnsignedBigInt
+  parentId        BigInt                @db.UnsignedBigInt()
+  title           String                @db.VarChar(75)
+  metaTitle       String                @db.VarChar(300)
+  slug            String                @db.VarChar(100)
+  summery         String                @db.TinyText
+  published       Int                   @db.TinyInt()
+  created_at      DateTime              @default(now()) @db.Timestamp(0)
+  updated_at      DateTime              @default(now()) @db.Timestamp(0)
+  published_at    DateTime              @default(now()) @db.Timestamp(0)
+  user            user                  @relation(fields: [authorId], references: [id], map: "products_authorId_foreign")
+  post_comment   post_comment[]
+  post_tag       post_tag[]
+  post_category post_category[]
+  post_meta       post_meta[]
+ 
+}
+
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt    @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime? @db.Timestamp(0)
+  expires_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model post_comment {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  postId    BigInt   @db.UnsignedBigInt
+  parentId        BigInt                @db.UnsignedBigInt()
+  title           String                @db.VarChar(75)
+   published       Int                   @db.TinyInt()
+  published_at    DateTime              @default(now()) @db.Timestamp(0)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  post      post    @relation(fields: [postId], references: [id], map: "post_comments_postId_foreign")
+
+}
+model post_tag {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  post_id    BigInt   @db.UnsignedBigInt
+  tag_id    BigInt   @db.UnsignedBigInt
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  posts      post    @relation(fields: [post_id], references: [id], map: "post_tag_post_id_foreign")
+  tag     tag    @relation(fields: [tag_id], references: [id], map: "post_tag_tag_id_foreign")
+
+}
+model post_category {
+  id         BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  postId    BigInt      @db.UnsignedBigInt
+  categoryId    BigInt  @db.UnsignedBigInt
+  created_at DateTime   @default(now()) @db.Timestamp(0)
+  updated_at DateTime   @default(now()) @db.Timestamp(0)
+  post      post        @relation(fields: [postId], references: [id], map: "post_category_postId_foreign")
+  category  category    @relation(fields: [categoryId], references: [id], map: "post_category_categoryId_foreign")
+
+}
+model post_meta {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  postId      BigInt    @db.UnsignedBigInt
+  key       String    @db.VarChar(50)
+  content   String    @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  posts      post     @relation(fields: [postId], references: [id], map: "post_meta_postId_foreign")
+
+}
+
